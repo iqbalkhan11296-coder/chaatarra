@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chaatarra | Menu Management</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="./supabase.js?v=1"></script>
+<style>
+:root{--burgundy:#4b001f;--deep:#160005;--gold:#f5d27a;--muted:#d9bd78;--panel:#26000e;--line:#76551d;--cream:#fff8e9;--ink:#25151a;--green:#236a42;--red:#8b2030}
+*{box-sizing:border-box}body{margin:0;background:var(--deep);color:#fff;font-family:Arial,sans-serif}header{background:var(--burgundy);text-align:center;padding:20px 14px;border-bottom:1px solid var(--gold)}h1{margin:0;color:var(--gold);font: bold clamp(25px,5vw,36px) Georgia,serif;letter-spacing:3px}header p{margin:6px 0 0;color:var(--muted);font-size:11px;letter-spacing:2px}.wrap{max-width:1000px;margin:auto;padding:16px}.notice{background:#2b1019;border:1px solid var(--line);border-radius:10px;padding:12px 14px;color:#f2dba6;line-height:1.5;font-size:13px;margin-bottom:14px}.tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:14px 0}.tab{background:#29000e;color:var(--gold);border:1px solid var(--line);border-radius:8px;padding:12px 6px;font-weight:bold}.tab.active{background:var(--gold);color:var(--burgundy)}.panel{background:linear-gradient(145deg,#310011,#1a0007);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:16px}.panel h2{font: bold 22px Georgia,serif;color:var(--gold);margin:0 0 14px}.formgrid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px}.field label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}.field input,.field select{width:100%;padding:12px;border:1px solid #b08a42;border-radius:8px;background:#fff8e9;color:#25151a;font-size:16px;min-height:44px}.checks{display:flex;align-items:center;gap:8px;margin:13px 0;color:#f7e6bd}.checks input{width:18px;height:18px}.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.btn{border:0;border-radius:8px;padding:12px 15px;font-weight:bold;cursor:pointer;min-height:44px}.primary{background:var(--gold);color:var(--burgundy)}.secondary{background:#fff8e9;color:var(--burgundy)}.danger{background:#7d1828;color:#fff}.mutedbtn{background:#46303a;color:#fff}.status{margin-top:10px;font-size:13px;line-height:1.5}.status.error{color:#ffb5b5}.status.ok{color:#a8f0c2}.menuhead{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}.count{color:var(--muted);font-size:13px}.search{width:100%;padding:12px;border-radius:8px;border:1px solid var(--line);margin:0 0 12px;font-size:16px}.items{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px}.item{background:#fff8e9;color:var(--ink);border-radius:10px;padding:13px;border:1px solid #c7a85e}.item.off{opacity:.68}.itemtop{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}.itemname{font-weight:bold;line-height:1.35;overflow-wrap:anywhere}.price{font-weight:bold;color:var(--burgundy);white-space:nowrap}.meta{font-size:12px;color:#6d555c;margin:7px 0}.pill{display:inline-block;background:#eee1c4;color:#4b001f;border-radius:20px;padding:4px 8px;font-size:11px}.itemactions{display:flex;gap:7px;margin-top:10px}.itemactions button{flex:1;padding:9px 6px;border-radius:7px;border:0;font-weight:bold;min-height:38px}.edit{background:#4b001f;color:#f5d27a}.toggle{background:#e7d8b7;color:#3a2229}.delete{background:#8b2030;color:white}.empty{text-align:center;color:var(--muted);padding:26px 10px}.footer{text-align:center;color:#b99d6b;font-size:12px;padding:8px 0 24px}@media(max-width:600px){.formgrid{grid-template-columns:1fr 1fr}.field.namefield{grid-column:1/-1}.tabs{grid-template-columns:repeat(2,1fr)}.panel{padding:13px}.wrap{padding:10px}}
+</style>
+</head>
+<body>
+<header><h1>CHAATARRA</h1><p>THE HOUSE OF CHAATS · MENU MANAGEMENT</p></header>
+<main class="wrap">
+<div class="notice"><strong>Separate menu manager</strong><br>Changes here are saved to <code>chaat_products_clone</code> and are intended for <code>billing_clone.html</code>. Your original menu table is not edited. Make sure your <code>supabase.js</code> config and Supabase permissions are working.</div>
+<section class="panel">
+<h2 id="formTitle">Add menu item</h2>
+<form id="productForm">
+<div class="formgrid">
+<div class="field namefield"><label for="name">Product name</label><input id="name" maxlength="120" required placeholder="e.g. Pani Puri"></div>
+<div class="field"><label for="price">Price (₹)</label><input id="price" type="number" min="0" step="1" required placeholder="50"></div>
+<div class="field"><label for="category">Category</label><select id="category" required><option value="Chaat">Chaats</option><option value="Momos">Momos</option><option value="Drinks">Drinks</option><option value="Combos">Combos</option></select></div>
+</div>
+<label class="checks"><input id="available" type="checkbox" checked> Available for ordering</label>
+<div class="actions"><button class="btn primary" id="saveBtn" type="submit">Save item</button><button class="btn secondary" type="button" id="cancelBtn" hidden>Cancel edit</button><button class="btn mutedbtn" type="button" id="seedBtn">Load missing menu items</button></div>
+<div id="status" class="status" role="status" aria-live="polite"></div>
+</form>
+</section>
+<section class="panel">
+<div class="menuhead"><h2 style="margin-bottom:10px">Your menu</h2><span id="count" class="count">Loading…</span></div>
+<div class="tabs" role="tablist"><button class="tab active" data-cat="Chaat">Chaats</button><button class="tab" data-cat="Momos">Momos</button><button class="tab" data-cat="Drinks">Drinks</button><button class="tab" data-cat="Combos">Combos</button></div>
+<input id="search" class="search" type="search" placeholder="Search this category…" aria-label="Search menu items">
+<div id="items" class="items"><div class="empty">Connecting to Supabase…</div></div>
+</section>
+<div class="footer">CHAATARRA · PREMIUM CHAATS & CRAFTED BITES</div>
+</main>
+<script>
+const TABLE='chaat_products_clone';
+const starterItems=[
+ {name:'Pani Puri',price:45,category:'Chaat',available:true},
+ {name:'Masala Puri',price:55,category:'Chaat',available:true},
+ {name:'Samoosa Chaat',price:60,category:'Chaat',available:true},
+ {name:'Chicken Momos',price:100,category:'Momos',available:true},
+ {name:'Paneer Momos',price:100,category:'Momos',available:true},
+ {name:'Oreo Shake',price:70,category:'Drinks',available:true},
+ {name:'Lotus Biscoff Shake',price:80,category:'Drinks',available:true},
+ {name:'Watermelon Shake',price:80,category:'Drinks',available:true},
+ {name:'Strawberry Shake',price:90,category:'Drinks',available:true},
+ {name:'Snickers Shake',price:70,category:'Drinks',available:true},
+ {name:'Gulkhand Shake',price:60,category:'Drinks',available:true},
+ {name:'Watermelon Lime',price:50,category:'Drinks',available:true},
+ {name:'Mint Lime',price:30,category:'Drinks',available:true},
+ {name:'Muskmelon Shake',price:90,category:'Drinks',available:true},
+ {name:'Classic Coffee',price:70,category:'Drinks',available:true},
+ {name:'Butterscotch Coffee',price:80,category:'Drinks',available:true},
+ {name:'Vanilla Coffee',price:80,category:'Drinks',available:true},
+ {name:'Hazelnut Coffee',price:80,category:'Drinks',available:true},
+ {name:'Coconut Coffee',price:80,category:'Drinks',available:true},
+ {name:'Chocolate Coffee',price:80,category:'Drinks',available:true},
+ {name:'Blueberry Shake',price:130,category:'Drinks',available:true},
+ {name:'Mango Shake',price:90,category:'Drinks',available:true},
+ {name:'Tender Coconut Shake',price:90,category:'Drinks',available:true},
+ {name:'Pani Puri + Watermelon Lime',price:80,category:'Combos',available:true},
+ {name:'Masala Puri + Watermelon Lime',price:90,category:'Combos',available:true},
+ {name:'Samoosa Chaat + Biscoff Shake',price:130,category:'Combos',available:true},
+ {name:'Masala Puri + Watermelon Shake',price:125,category:'Combos',available:true},
+ {name:'Samoosa Chaat + Watermelon Shake',price:130,category:'Combos',available:true},
+ {name:'Masala Puri + Biscoff Shake',price:125,category:'Combos',available:true},
+ {name:'Momos + Watermelon Shake',price:170,category:'Combos',available:true}
+];
+let activeCategory='Chaat',products=[],editingId=null;
+const $=id=>document.getElementById(id);
+function setStatus(message,type=''){const el=$('status');el.textContent=message;el.className='status '+type;}
+function escapeHtml(value){return String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function getClient(){if(typeof supabaseClient!=='undefined'&&supabaseClient)return supabaseClient;if(window.supabaseClient)return window.supabaseClient;return null;}
+async function loadItems(){const client=getClient();if(!client){$('items').innerHTML='<div class="empty">Supabase client was not found. Check that supabase.js loads and defines <code>supabaseClient</code>.</div>';$('count').textContent='Not connected';return;} $('items').innerHTML='<div class="empty">Loading menu…</div>';let {data,error}=await client.from(TABLE).select('*').order('name',{ascending:true});if(error){$('items').innerHTML='<div class="empty">Could not load menu: '+escapeHtml(error.message)+'</div>';$('count').textContent='Load failed';return;}products=data||[];const existing=new Set(products.map(p=>String(p.category||'').trim().toLowerCase()+'|'+String(p.name||'').trim().toLowerCase()));const missing=starterItems.filter(p=>!existing.has(p.category.toLowerCase()+'|'+p.name.toLowerCase()));if(missing.length){setStatus('Preloading '+missing.length+' missing menu item(s)…');const seeded=await client.from(TABLE).insert(missing);if(seeded.error){setStatus('Menu loaded, but automatic preload failed: '+seeded.error.message+'. Use Load missing menu items after checking table permissions.','error');renderItems();return;}setStatus('Menu preloaded. '+missing.length+' item(s) added; existing items and prices were left unchanged.','ok');const refreshed=await client.from(TABLE).select('*').order('name',{ascending:true});if(refreshed.error){setStatus('Items were added, but refresh failed: '+refreshed.error.message,'error');renderItems();return;}products=refreshed.data||[];}else if(products.length===0){setStatus('No menu items found yet.','error');}renderItems();}
+function renderItems(){const term=$('search').value.trim().toLowerCase();const filtered=products.filter(p=>String(p.category||'').toLowerCase()===activeCategory.toLowerCase()&&String(p.name||'').toLowerCase().includes(term));$('count').textContent=products.length+' total items · '+filtered.length+' in '+(activeCategory==='Chaat'?'Chaats':activeCategory);document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.cat===activeCategory));if(!filtered.length){$('items').innerHTML='<div class="empty">No items in this category yet. The starter menu will load automatically when the page connects.</div>';return;}$('items').innerHTML=filtered.map(p=>{const available=p.available!==false;return `<article class="item ${available?'':'off'}"><div class="itemtop"><div class="itemname">${escapeHtml(p.name)}</div><div class="price">₹${Number(p.price||0).toFixed(0)}</div></div><div class="meta"><span class="pill">${escapeHtml(p.category)}</span> &nbsp; ${available?'Available':'Unavailable'}</div><div class="itemactions"><button class="edit" data-action="edit" data-id="${escapeHtml(p.id)}">Edit</button><button class="toggle" data-action="toggle" data-id="${escapeHtml(p.id)}">${available?'Disable':'Enable'}</button><button class="delete" data-action="delete" data-id="${escapeHtml(p.id)}">Delete</button></div></article>`;}).join('');}
+function resetForm(){editingId=null;$('productForm').reset();$('available').checked=true;$('formTitle').textContent='Add menu item';$('saveBtn').textContent='Save item';$('cancelBtn').hidden=true;}
+$('productForm').addEventListener('submit',async e=>{e.preventDefault();const client=getClient();if(!client){setStatus('Supabase client not found. Check supabase.js.','error');return;}const payload={name:$('name').value.trim(),price:Number($('price').value),category:$('category').value,available:$('available').checked};if(!payload.name||!Number.isFinite(payload.price)||payload.price<0){setStatus('Enter a valid name and price.','error');return;}const button=$('saveBtn');button.disabled=true;setStatus('Saving…');let result;if(editingId!==null)result=await client.from(TABLE).update(payload).eq('id',editingId);else result=await client.from(TABLE).insert([payload]);button.disabled=false;if(result.error){setStatus('Save failed: '+result.error.message,'error');return;}setStatus(editingId!==null?'Item updated.':'Item added.','ok');resetForm();await loadItems();});
+$('cancelBtn').addEventListener('click',resetForm);
+document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>{activeCategory=b.dataset.cat;renderItems();}));$('search').addEventListener('input',renderItems);
+$('items').addEventListener('click',async e=>{const btn=e.target.closest('button[data-action]');if(!btn)return;const p=products.find(x=>String(x.id)===btn.dataset.id);if(!p)return;const client=getClient();if(!client){setStatus('Supabase client not found.','error');return;}if(btn.dataset.action==='edit'){editingId=p.id;$('name').value=p.name||'';$('price').value=p.price??'';$('category').value=p.category||'Chaat';$('available').checked=p.available!==false;$('formTitle').textContent='Edit menu item';$('saveBtn').textContent='Update item';$('cancelBtn').hidden=false;window.scrollTo({top:0,behavior:'smooth'});return;}if(btn.dataset.action==='delete'){if(!confirm('Delete “'+p.name+'” from the cloned menu?'))return;const {error}=await client.from(TABLE).delete().eq('id',p.id);if(error){setStatus('Delete failed: '+error.message,'error');return;}setStatus('Item deleted.','ok');await loadItems();return;}if(btn.dataset.action==='toggle'){const {error}=await client.from(TABLE).update({available:p.available===false}).eq('id',p.id);if(error){setStatus('Availability update failed: '+error.message,'error');return;}setStatus(p.available===false?'Item enabled.':'Item disabled.','ok');await loadItems();}});
+$('seedBtn').addEventListener('click',async()=>{const client=getClient();if(!client){setStatus('Supabase client not found. Check supabase.js.','error');return;}const btn=$('seedBtn');btn.disabled=true;setStatus('Checking for missing menu items…');await loadItems();btn.disabled=false;});
+loadItems();
+</script>
+</body>
+</html>
